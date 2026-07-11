@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .fin-container {
+        max-width: 1100px;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .fin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .fin-header h2 { margin: 0; color: #2c3e50; }
+    .add-expense-btn {
+        background: #e74c3c;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+    .add-expense-btn:hover { background: #c0392b; }
+
+    .filter-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+    .quick-btn {
+        background: #ecf0f1;
+        color: #2c3e50;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    .quick-btn:hover { background: #dfe6e9; }
+    .quick-btn.active { background: #3498db; color: white; }
+
+    .range-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        flex-wrap: wrap;
+    }
+    .range-form input[type="date"] {
+        padding: 8px 10px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+    .range-form button {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .range-form button:hover { background: #219150; }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .summary-card {
+        border-radius: 15px;
+        padding: 22px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card-income { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .card-expense { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .card-profit { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .summary-card h3 { margin: 0; font-size: 26px; }
+    .summary-card p { margin: 8px 0 0 0; font-size: 13px; opacity: 0.9; }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+    .fin-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-top: 5px solid;
+    }
+    .income-card { border-top-color: #2ecc71; }
+    .expense-card { border-top-color: #e74c3c; }
+
+    .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .fin-table { width: 100%; border-collapse: collapse; }
+    .fin-table th {
+        text-align: left;
+        padding: 10px 8px;
+        font-size: 12px;
+        color: #7f8c8d;
+        border-bottom: 2px solid #f1f1f1;
+    }
+    .fin-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+        border-bottom: 1px solid #f9f9f9;
+    }
+    .badge {
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .badge-salary { background: #dbeafe; color: #1e40af; }
+    .badge-rent { background: #fef3c7; color: #92400e; }
+    .badge-utility { background: #e0e7ff; color: #3730a3; }
+    .badge-repair { background: #fed7d7; color: #9b2c2c; }
+    .badge-other { background: #f0f2f5; color: #7f8c8d; }
+
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+        .summary-cards { grid-template-columns: 1fr; }
+        .range-form { margin-left: 0; width: 100%; }
+    }
+</style>
+
+<div class="fin-container">
+    <div class="fin-header">
+        <div>
+            <h2>💼 Moliyaviy Hisobot</h2>
+            <p style="color:#7f8c8d; margin: 5px 0 0 0; font-size: 13px;">
+                📅 {{ start_date|date:"d.m.Y" }} — {{ end_date|date:"d.m.Y" }}
+            </p>
+        </div>
+        <a href="{% url 'add_expense' %}" class="add-expense-btn">➕ Xarajat qo'shish</a>
+    </div>
+
+    <div class="filter-bar">
+        <a href="?start={{ today|date:'Y-m-d' }}&end={{ today|date:'Y-m-d' }}"
+           class="quick-btn {% if start_date == today and end_date == today %}active{% endif %}">Bugun</a>
+        <a href="?start={{ this_month_start|date:'Y-m-d' }}&end={{ today|date:'Y-m-d' }}"
+           class="quick-btn {% if start_date == this_month_start and end_date == today %}active{% endif %}">Shu oy</a>
+        <a href="?start={{ last_month_start|date:'Y-m-d' }}&end={{ last_month_end|date:'Y-m-d' }}"
+           class="quick-btn {% if start_date == last_month_start and end_date == last_month_end %}active{% endif %}">O'tgan oy</a>
+
+        <form method="get" class="range-form">
+            <input type="date" name="start" value="{{ start_date|date:'Y-m-d' }}">
+            <span style="color:#95a5a6;">—</span>
+            <input type="date" name="end" value="{{ end_date|date:'Y-m-d' }}">
+            <button type="submit">🔍 Ko'rsatish</button>
+        </form>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card card-income">
+            <h3>{{ total_income }} so'm</h3>
+            <p>💰 Jami kirim (o'quvchilardan)</p>
+        </div>
+        <div class="summary-card card-expense">
+            <h3>{{ total_expense }} so'm</h3>
+            <p>💸 Jami chiqim (xarajatlar)</p>
+        </div>
+        <div class="summary-card card-profit">
+            <h3>{{ net_profit }} so'm</h3>
+            <p>📈 Sof foyda</p>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div class="fin-card income-card">
+            <div class="card-title">
+                <h3 style="margin:0; color:#27ae60;">🟢 To'lovlar (kirim)</h3>
+                <span style="font-size:12px; color:#95a5a6;">{{ payments|length }} ta</span>
+            </div>
+            <table class="fin-table">
+                <thead>
+                    <tr>
+                        <th>Sana</th>
+                        <th>O'quvchi</th>
+                        <th>Summa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>{{ p.date|date:"d.m.Y" }}</td>
+                        <td>{{ p.student.full_name }}</td>
+                        <td style="color:#27ae60; font-weight:bold;">+{{ p.amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center; color:#ccc; padding:15px;">To'lovlar yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="fin-card expense-card">
+            <div class="card-title">
+                <h3 style="margin:0; color:#e74c3c;">🔴 Xarajatlar (chiqim)</h3>
+                <span style="font-size:12px; color:#95a5a6;">{{ expenses|length }} ta</span>
+            </div>
+            <table class="fin-table">
+                <thead>
+                    <tr>
+                        <th>Sana</th>
+                        <th>Nomi</th>
+                        <th>Turi</th>
+                        <th>Summa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td>{{ e.date|date:"d.m.Y" }}</td>
+                        <td><b>{{ e.title }}</b>{% if e.comment %}<br><small style="color:#95a5a6;">{{ e.comment }}</small>{% endif %}</td>
+                        <td>
+                            <span class="badge badge-{{ e.expense_type }}">{{ e.get_expense_type_display }}</span>
+                        </td>
+                        <td style="color:#e74c3c; font-weight:bold;">-{{ e.amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align:center; color:#ccc; padding:15px;">Xarajatlar yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

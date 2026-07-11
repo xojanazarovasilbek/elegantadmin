@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if messages %}
+    <div style="max-width: 500px; margin: 10px auto;">
+        {% for message in messages %}
+            <div style="padding: 15px; border-radius: 8px; margin-bottom: 10px; 
+                {% if message.tags == 'warning' %} background: #fff3cd; color: #856404; border: 1px solid #ffeeba;
+                {% else %} background: #d4edda; color: #155724; border: 1px solid #c3e6cb; {% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div style="max-width: 500px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+    <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">💰 To'lovni qabul qilish</h2>
+    
+    <div style="background: #f0f7ff; padding: 15px; border-radius: 10px; margin-bottom: 25px; border-left: 5px solid #3498db;">
+        <p style="margin: 0; font-size: 16px;">O'quvchi: <strong>{{ student.full_name }}</strong></p>
+        <p style="margin: 5px 0; font-size: 14px; color: #555;">Guruh narxi: <strong id="group-price">{{ student.group.price }}</strong> so'm</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Hozirgi muddat: 
+            <span style="color: {% if student.days_left < 0 %}red{% else %}green{% endif %}; font-weight: bold;">
+                {{ student.pay_until|default:"Muddati yo'q" }}
+            </span>
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px;">To'lov summasi (so'm):</label>
+            <input type="number" name="amount" id="payment-amount" value="{{ student.group.price }}" required 
+                   style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;" 
+                   oninput="calculateDebt()">
+            
+            <div id="debt-status" style="margin-top: 10px; font-size: 14px; font-weight: bold; display: none;"></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Yangi to'lov muddati (Pay until):</label>
+            <input type="date" name="pay_until" 
+                   style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; background: #fffcf0;">
+            <small style="color: #888;">* To'liq to'lovda avtomat 30 kun qo'shiladi</small>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px;">To'lov turi:</label>
+            <select name="payment_type" id="payment_type" onchange="toggleReceipt()"
+                    style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px;">
+                <option value="cash">💵 Naqd pul</option>
+                <option value="click">📱 Click / Payme / Uzum</option>
+            </select>
+        </div>
+
+        <div id="receipt-area" style="display: none; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 2px dashed #ddd;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Chek skrinshotini yuklang:</label>
+            <input type="file" name="receipt" id="receipt-input" accept="image/*">
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+            ✅ To'lovni tasdiqlash
+        </button>
+        
+        <a href="{% url 'student_list' %}" style="display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 14px;">Bekor qilish</a>
+    </form>
+</div>
+
+<script>
+    // Qarzni real vaqtda hisoblash funksiyasi
+    function calculateDebt() {
+        var groupPrice = parseFloat(document.getElementById('group-price').innerText);
+        var amountPaid = parseFloat(document.getElementById('payment-amount').value) || 0;
+        var statusDiv = document.getElementById('debt-status');
+
+        if (amountPaid < groupPrice) {
+            var debt = groupPrice - amountPaid;
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#e67e22';
+            statusDiv.innerHTML = '⚠️ Eslatma: ' + debt.toLocaleString() + ' so\'m qarz qolmoqda!';
+        } else if (amountPaid > groupPrice) {
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#27ae60';
+            statusDiv.innerHTML = '✅ Guruh narxidan ortiqcha to\'lov!';
+        } else {
+            statusDiv.style.display = 'none';
+        }
+    }
+
+    function toggleReceipt() {
+        var type = document.getElementById('payment_type').value;
+        var area = document.getElementById('receipt-area');
+        var input = document.getElementById('receipt-input');
+        if (type === 'click') {
+            area.style.display = 'block';
+            input.required = true;
+        } else {
+            area.style.display = 'none';
+            input.required = false;
+        }
+    }
+    
+    // Sahifa yuklanganda bir marta tekshirib qo'yish
+    window.onload = calculateDebt;
+</script>
+{% endblock %}

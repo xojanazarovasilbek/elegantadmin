@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .report-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .report-header h2 { margin: 0; color: #2c3e50; }
+
+    .date-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .nav-btn {
+        background: #ecf0f1;
+        color: #2c3e50;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: bold;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .nav-btn:hover { background: #dfe6e9; }
+    .nav-btn-today { background: #27ae60; color: white; }
+    .nav-btn-today:hover { background: #219150; }
+    .date-input {
+        padding: 8px 12px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+    .report-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-top: 5px solid;
+    }
+    .absent-card { border-top-color: #e74c3c; }
+    .present-card { border-top-color: #2ecc71; }
+
+    .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .count-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        color: white;
+        font-weight: bold;
+    }
+    .bg-red { background: #e74c3c; }
+    .bg-green { background: #2ecc71; }
+
+    .student-list { list-style: none; padding: 0; margin: 0; }
+    .student-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 10px;
+        border-bottom: 1px solid #f1f1f1;
+        transition: background 0.2s;
+    }
+    .student-item:hover { background: #fdfdfd; }
+    .student-info b { color: #2c3e50; }
+    .group-tag {
+        font-size: 11px;
+        background: #f0f2f5;
+        padding: 2px 8px;
+        border-radius: 10px;
+        color: #7f8c8d;
+    }
+    .phone-link { color: #3498db; text-decoration: none; font-size: 13px; }
+
+    .edit-btn {
+        background: #f1c40f;
+        color: #2c3e50;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .edit-btn:hover { background: #d4ac0d; }
+
+    .locked-badge {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #95a5a6;
+        background: #f4f4f4;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="report-container">
+    <div class="report-header">
+        <h2>📊 Davomat Hisoboti</h2>
+        <form method="get" class="date-nav">
+            <a href="?date={{ prev_date|date:'Y-m-d' }}" class="nav-btn">◀ Kecha</a>
+            <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"
+                   class="date-input" onchange="this.form.submit()">
+            <a href="?date={{ next_date|date:'Y-m-d' }}" class="nav-btn">Ertaga ▶</a>
+            <a href="?date={{ today|date:'Y-m-d' }}" class="nav-btn nav-btn-today">Bugun</a>
+        </form>
+    </div>
+
+    <p style="text-align:center; color:#7f8c8d; margin-bottom: 20px;">
+        📅 Ko'rsatilayotgan sana: <b>{{ selected_date|date:"d.m.Y (l)" }}</b>
+    </p>
+
+    <div class="grid-container">
+        <div class="report-card absent-card">
+            <div class="card-title">
+                <h3 style="margin: 0; color: #c0392b;">🔴 Kelmaganlar</h3>
+                <span class="count-badge bg-red">{{ absent|length }}</span>
+            </div>
+            <ul class="student-list">
+                {% for a in absent %}
+                <li class="student-item">
+                    <div class="student-info">
+                        <b>{{ a.student.full_name }}</b> <br>
+                        <span class="group-tag">{{ a.group.name }}</span>
+                        <a href="tel:{{ a.student.phone }}" class="phone-link">📞 {{ a.student.phone }}</a>
+                    </div>
+                    {% if a.is_editable %}
+                    <a href="{% url 'attendance_edit' a.pk %}" class="edit-btn">✏️ O'zgartirish</a>
+                    {% else %}
+                    <span class="locked-badge">🔒 Bloklangan</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <p style="color: #95a5a6; text-align: center;">Hamma darsda! ✨</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="report-card present-card">
+            <div class="card-title">
+                <h3 style="margin: 0; color: #27ae60;">🟢 Kelganlar</h3>
+                <span class="count-badge bg-green">{{ present|length }}</span>
+            </div>
+            <ul class="student-list">
+                {% for p in present %}
+                <li class="student-item">
+                    <div class="student-info">
+                        <b>{{ p.student.full_name }}</b> <br>
+                        <span class="group-tag">{{ p.group.name }}</span>
+                    </div>
+                    {% if p.is_editable %}
+                    <a href="{% url 'attendance_edit' p.pk %}" class="edit-btn">✏️ O'zgartirish</a>
+                    {% else %}
+                    <span class="locked-badge">🔒 Bloklangan</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <p style="color: #95a5a6; text-align: center;">Hali hech kim kelmadi.</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

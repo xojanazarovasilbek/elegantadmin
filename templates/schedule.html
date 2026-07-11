@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .sched-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sched-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .sched-header h2 { margin: 0; color: #2c3e50; }
+
+    .nav-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav-btn {
+        background: #ecf0f1;
+        color: #2c3e50;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    .nav-btn:hover { background: #dfe6e9; }
+    .nav-btn-alt { background: #3498db; color: white; }
+    .nav-btn-alt:hover { background: #2980b9; }
+    .nav-btn-today { background: #27ae60; color: white; }
+    .nav-btn-today:hover { background: #219150; }
+
+    .week-block { margin-bottom: 25px; }
+    .week-label {
+        font-weight: bold;
+        color: #7f8c8d;
+        margin-bottom: 8px;
+        font-size: 13px;
+        padding-left: 4px;
+    }
+
+    .sched-table-wrapper {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        overflow-x: auto;
+        padding: 10px;
+    }
+    .sched-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 6px;
+        min-width: 900px;
+    }
+    .sched-table th {
+        padding: 10px 8px;
+        background: #2c3e50;
+        color: white;
+        font-size: 12px;
+        border-radius: 8px;
+        text-align: center;
+        line-height: 1.4;
+    }
+    .sched-table th.group-col { text-align: left; background: #34495e; min-width: 160px; }
+    .sched-table th.today-col { background: #27ae60; }
+
+    .group-name-cell {
+        padding: 12px;
+        font-weight: bold;
+        color: #2c3e50;
+        background: #f8f9fa;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+    .group-name-cell small { display: block; color: #7f8c8d; font-weight: normal; font-size: 11px; }
+
+    .day-cell {
+        text-align: center;
+        padding: 10px 6px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: bold;
+        min-width: 90px;
+    }
+    .day-active { background: #d1f2eb; color: #0e6655; }
+    .day-inactive { background: #f4f4f4; color: #ccc; font-weight: normal; }
+    .today-col.day-active { background: #a9dfbf; }
+
+    .edit-btn {
+        display: inline-block;
+        margin-top: 8px;
+        background: #3498db;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .edit-btn:hover { background: #2980b9; }
+</style>
+
+<div class="sched-container">
+    <div class="sched-header">
+        <h2>🖐️ Guruhlar Dars Jadvali</h2>
+        <div class="nav-controls">
+            {% if show_full_range %}
+                <a href="{% url 'schedule_view' %}" class="nav-btn nav-btn-today">🔙 Haftalik ko'rinishga qaytish</a>
+            {% else %}
+                <a href="?week={{ week_offset|add:"-1" }}" class="nav-btn">◀ Oldingi hafta</a>
+                <a href="?week=0" class="nav-btn nav-btn-today">Bugungi hafta</a>
+                <a href="?week={{ week_offset|add:"1" }}" class="nav-btn">Keyingi hafta ▶</a>
+                <a href="?range=full" class="nav-btn nav-btn-alt">📅 1 oy oldin — 1 oy keyin</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% for week in weeks %}
+    <div class="week-block">
+        <div class="week-label">
+            📆 {{ week.0.date|date:"d.m.Y" }} — {{ week.6.date|date:"d.m.Y" }}
+        </div>
+        <div class="sched-table-wrapper">
+            <table class="sched-table">
+                <thead>
+                    <tr>
+                        <th class="group-col">Guruh</th>
+                        {% for day in week %}
+                        <th class="{% if day.is_today %}today-col{% endif %}">
+                            {{ day.label }}<br>{{ day.date|date:"d.m" }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in groups %}
+                    <tr>
+                        <td class="group-name-cell">
+                            {{ group.name }}
+                            <small>{{ group.teacher.user.get_full_name|default:group.teacher.user.username|default:"Ustoz biriktirilmagan" }}</small>
+                            <a href="{% url 'schedule_edit' group.id %}" class="edit-btn">✏️ Vaqt belgilash</a>
+                        </td>
+                        {% for day in week %}
+                            {% if day.code in group.get_days_list %}
+                            <td class="day-cell day-active {% if day.is_today %}today-col{% endif %}">
+                                {{ group.start_time|time:"H:i" }}<br>{{ group.end_time|time:"H:i" }}
+                            </td>
+                            {% else %}
+                            <td class="day-cell day-inactive">—</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" style="text-align:center; padding:20px; color:#95a5a6;">Guruhlar yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

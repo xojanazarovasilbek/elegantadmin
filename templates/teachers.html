@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>👨‍🏫 Ustozlar tarkibi</h2>
+    <a href="{% url 'teacher_create' %}" class="btn btn-add">+ Yangi ustoz qo'shish</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>F.I.SH (Login)</th>
+            <th>Telefon raqami</th>
+            <th>Biriktirilgan guruhlar</th>
+            <th style="text-align: center;">Amallar</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in teachers %}
+        <tr>
+            <td><b>{{ t.user.get_full_name|default:t.user.username }}</b></td>
+            
+            <td>{{ t.phone }}</td>
+            
+            <td>
+                {% for group in t.group_set.all %}
+                    <span style="background: #e1f5fe; color: #01579b; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 5px; display: inline-block; margin-bottom: 5px; font-weight: 500;">
+                        {{ group.name }}
+                    </span>
+                {% empty %}
+                    <span style="color: #999; font-style: italic; font-size: 13px;">Guruh biriktirilmagan</span>
+                {% endfor %}
+            </td>
+            
+            <td style="text-align: center;">
+                <a href="{% url 'teacher_update' t.id %}" class="btn btn-edit" title="Tahrirlash">✏️</a>
+                <a href="{% url 'teacher_delete' t.id %}" class="btn btn-delete" title="O'chirish">🗑️</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width: 500px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+    <h2 style="text-align: center; color: #2c3e50; margin-bottom: 10px;">🖐️ Dars vaqtini belgilash</h2>
+    <p style="text-align: center; color: #7f8c8d; margin-bottom: 25px;">Guruh: <b>{{ group.name }}</b></p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 20px;">
+            <label style="display:block; font-weight:600; margin-bottom:10px;">Dars kunlari:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                {% for code, label in weekdays %}
+                <label style="display:flex; align-items:center; gap:6px; background:#f8f9fa; padding:8px 10px; border-radius:8px; font-size:13px; cursor:pointer;">
+                    <input type="checkbox" name="days" value="{{ code }}" {% if code in selected_days %}checked{% endif %}>
+                    {{ label|slice:":3" }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 22px;">
+            <div style="flex: 1;">
+                <label style="display:block; font-weight:600; margin-bottom:8px;">Boshlanish vaqti:</label>
+                <input type="time" name="start_time" value="{{ group.start_time|time:'H:i' }}" required
+                       style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+            </div>
+            <div style="flex: 1;">
+                <label style="display:block; font-weight:600; margin-bottom:8px;">Tugash vaqti:</label>
+                <input type="time" name="end_time" value="{{ group.end_time|time:'H:i' }}" required
+                       style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+            </div>
+        </div>
+
+        <button type="submit" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:8px; font-size:17px; font-weight:bold; cursor:pointer;">
+            💾 Saqlash
+        </button>
+
+        <a href="{% url 'schedule_view' %}" style="display:block; text-align:center; margin-top:15px; color:#7f8c8d; text-decoration:none; font-size:14px;">Bekor qilish</a>
+    </form>
+</div>
+
+{% endblock %}

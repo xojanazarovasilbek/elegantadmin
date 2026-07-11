@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width: 500px; margin: 40px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
+    <h3 style="margin-top:0; color:#2c3e50;">✏️ Davomatni tahrirlash</h3>
+    <p><b>{{ attendance.student.full_name }}</b> — {{ attendance.group.name }} ({{ attendance.date|date:"d.m.Y" }})</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
+            <input type="checkbox" name="is_present" {% if attendance.is_present %}checked{% endif %}>
+            Darsga keldi
+        </label>
+
+        <label style="display:block; margin-bottom:6px; font-size:13px; color:#7f8c8d;">Izoh:</label>
+        <textarea name="comment" rows="3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd;">{{ attendance.comment }}</textarea>
+
+        <button type="submit" style="margin-top:15px; background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">Saqlash</button>
+        <a href="{% url 'attendance_report' %}" style="margin-left:10px; color:#7f8c8d; text-decoration:none;">Bekor qilish</a>
+    </form>
+</div>
+
+{% endblock %}

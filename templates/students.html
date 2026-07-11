@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Barcha o'quvchilar</h2>
+    <a href="{% url 'student_create' %}" class="btn btn-add">+ Yangi o'quvchi</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>F.I.SH</th>
+            <th>Guruh</th>
+            <th>To'lov muddati</th>
+            <th>Balans</th>
+            <th>Amallar</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in students %}
+        <tr style="{% if s.days_left is not None and s.days_left < 0 %} background-color: #ffcdd2; {% elif s.days_left is not None and s.days_left <= 5 %} background-color: #fff9c4; {% endif %}">
+            
+            <td>
+                <a href="{% url 'student_detail' s.id %}" style="text-decoration: none; font-weight: bold; color: #2c3e50;">
+                    {{ s.full_name }}
+                </a>
+            </td>
+            <td>{{ s.group.name }}</td>
+            <td>
+                {{ s.pay_until|default:"Kiritilmagan" }}
+                {% if s.days_left is not None %}
+                    <br><small>({{ s.days_left }} kun qoldi)</small>
+                {% endif %}
+            </td>
+            <td style="color: {% if s.balance < 0 %}red{% else %}green{% endif %}; font-weight: bold;">
+                {{ s.balance }} so'm
+            </td>
+            <td>
+                <a href="{% url 'student_update' s.id %}" class="btn btn-edit">✏️</a>
+                <a href="{% url 'student_delete' s.id %}" class="btn btn-delete">🗑️</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

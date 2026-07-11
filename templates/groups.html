@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>📚 Guruhlar ro'yxati</h2>
+    <a href="{% url 'group_create' %}" class="btn btn-add">+ Yangi guruh qo'shish</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Guruh nomi</th>
+            <th>Mas'ul Ustoz</th>
+            <th>Kurs Narxi</th> <th>O'quvchilar</th>
+            <th style="text-align: center;">Amallar</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in groups %}
+        <tr>
+            <td><b style="color: #2c3e50;">{{ g.name }}</b></td>
+            
+            <td>
+                <span style="background: #f0f4f8; padding: 4px 10px; border-radius: 6px; font-size: 14px;">
+                    👨‍🏫 {{ g.teacher }}
+                </span>
+            </td>
+            
+            <td>
+                <b style="color: #27ae60;">{{ g.price|default:"0" }} so'm</b>
+            </td>
+            
+            <td>
+                <span style="background: #fff3e0; color: #e65100; padding: 3px 8px; border-radius: 12px; font-size: 13px; font-weight: bold;">
+                    👤 {{ g.students.count }} ta
+                </span>
+            </td>
+            
+            <td style="text-align: center;">
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                    <a href="{% url 'take_attendance' g.id %}" class="btn btn-info" style="font-size: 13px; padding: 6px 12px;">
+                        ✅ Davomat
+                    </a>
+                    <a href="{% url 'change_teacher' g.id %}" class="btn btn-edit" title="Ustozni almashtirish" style="background: #9b59b6; border-color: #8e44ad;">
+                        👤🔄
+                    </a>
+                    <form method="post"
+                        action="{% url 'delete_groups' g.pk %}"
+                        onsubmit="return confirm('Rostdan ham bu guruhni o‘chirmoqchimisiz?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="background: #f71605; border-color: #ad4b44;">
+                            O'chirish
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="text-align: center; color: #999; padding: 20px;">
+                Hozircha hech qanday guruh mavjud emas.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

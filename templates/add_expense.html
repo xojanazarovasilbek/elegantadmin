@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width: 500px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+    <h2 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">➕ Yangi xarajat qo'shish</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 18px;">
+            <label style="display:block; font-weight:600; margin-bottom:8px;">Xarajat nomi:</label>
+            <input type="text" name="title" required placeholder="Masalan: Iyul oyi maoshi - Aziz o'qituvchi"
+                   style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <label style="display:block; font-weight:600; margin-bottom:8px;">Xarajat turi:</label>
+            <select name="expense_type" required
+                    style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+                <option value="salary">👨‍🏫 Ustozlarga maosh</option>
+                <option value="rent">🏢 Ijara</option>
+                <option value="utility">💡 Kommunal (svet/gaz/suv)</option>
+                <option value="repair">🔧 Ta'mirlash</option>
+                <option value="other">📦 Boshqa</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <label style="display:block; font-weight:600; margin-bottom:8px;">Summa (so'm):</label>
+            <input type="number" name="amount" required min="0" step="0.01"
+                   style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <label style="display:block; font-weight:600; margin-bottom:8px;">Sana:</label>
+            <input type="date" name="date"
+                   style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:15px;">
+            <small style="color:#888;">* Bo'sh qoldirilsa, bugungi sana olinadi</small>
+        </div>
+
+        <div style="margin-bottom: 22px;">
+            <label style="display:block; font-weight:600; margin-bottom:8px;">Izoh (ixtiyoriy):</label>
+            <textarea name="comment" rows="3"
+                      style="width:100%; padding:12px; border:2px solid #eee; border-radius:8px; font-size:14px;"></textarea>
+        </div>
+
+        <button type="submit" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:8px; font-size:17px; font-weight:bold; cursor:pointer;">
+            💾 Saqlash
+        </button>
+
+        <a href="{% url 'financial_report' %}" style="display:block; text-align:center; margin-top:15px; color:#7f8c8d; text-decoration:none; font-size:14px;">Bekor qilish</a>
+    </form>
+</div>
+
+{% endblock %}

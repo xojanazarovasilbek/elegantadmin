@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>O'quvchini ko'chirish: {{ student.full_name }}</h2>
+<p>Hozirgi guruhi: <b>{{ student.group.name }}</b></p>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Yangi guruhni tanlang:</label><br>
+    <select name="new_group" required style="padding: 10px; width: 300px;">
+        {% for g in groups %}
+            <option value="{{ g.id }}">{{ g.name }} (Ustoz: {{ g.teacher }})</option>
+        {% endfor %}
+    </select>
+    <br><br>
+    <button type="submit" class="btn btn-add">Ko'chirishni tasdiqlash</button>
+    <a href="{% url 'student_detail' student.id %}">Bekor qilish</a>
+</form>
+{% endblock %}

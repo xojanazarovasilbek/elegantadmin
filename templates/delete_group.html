@@ -1,0 +1,7 @@
+<form method="post" action="{% url 'delete_groups' g.id %}"
+      onsubmit="return confirm('Rostdan ham bu guruhni o‘chirmoqchimisiz?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">
+        O'chirish
+    </button>
+</form>

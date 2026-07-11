@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ title }}</h2>
+<form method="post" style="max-width: 500px; background: #f4f4f4; padding: 20px; border-radius: 10px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" style="background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+        Saqlash
+    </button>
+    <a href="javascript:history.back()" style="margin-left: 10px; color: #666;">Bekor qilish</a>
+</form>
+{% endblock %}
