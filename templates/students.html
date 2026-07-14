@@ -5,6 +5,17 @@
     <a href="{% url 'student_create' %}" class="btn btn-add">+ Yangi o'quvchi</a>
 </div>
 
+<form method="get" style="display:flex; gap:10px; margin-bottom:20px; max-width:400px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="🔍 Ism yoki telefon bo'yicha qidirish..."
+           style="flex:1; padding:10px 14px; border:2px solid #eee; border-radius:8px; font-size:14px;">
+    <button type="submit" style="background:#3498db; color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:bold; cursor:pointer;">
+        Qidirish
+    </button>
+    {% if query %}
+    <a href="{% url 'student_list' %}" style="display:flex; align-items:center; color:#e74c3c; text-decoration:none; font-weight:bold; padding:0 10px;">✕ Tozalash</a>
+    {% endif %}
+</form>
+
 <table>
     <thead>
         <tr>
@@ -37,6 +48,16 @@
             <td>
                 <a href="{% url 'student_update' s.id %}" class="btn btn-edit">✏️</a>
                 <a href="{% url 'student_delete' s.id %}" class="btn btn-delete">🗑️</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="text-align:center; padding:20px; color:#95a5a6;">
+                {% if query %}
+                    "{{ query }}" bo'yicha hech narsa topilmadi.
+                {% else %}
+                    O'quvchilar yo'q.
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

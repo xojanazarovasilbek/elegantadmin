@@ -174,8 +174,19 @@ def student_payment(request, student_id):
 # 2. O'quvchilar ro'yxati
 @login_required
 def student_list(request):
-    students = Student.objects.all()
-    return render(request, 'students.html', {'students': students})
+    query = request.GET.get('q', '').strip()
+
+    students = Student.objects.select_related('group').all().order_by('full_name')
+
+    if query:
+        students = students.filter(
+            Q(full_name__icontains=query) | Q(phone__icontains=query)
+        )
+
+    return render(request, 'students.html', {
+        'students': students,
+        'query': query,
+    })
 
 # 3. Ustozlar ro'yxati
 @login_required
