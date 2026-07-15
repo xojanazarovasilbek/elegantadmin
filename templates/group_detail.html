@@ -3,7 +3,7 @@
 
 <style>
     .gd-container {
-        max-width: 1000px;
+        max-width: 1100px;
         margin: 20px auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -32,6 +32,33 @@
         font-size: 13px;
     }
     .back-btn:hover { background: #dfe6e9; }
+
+    .month-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .month-filter input[type="month"] {
+        padding: 8px 12px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .month-filter button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .month-filter button:hover { background: #2980b9; }
 
     .legend {
         display: flex;
@@ -73,6 +100,9 @@
     .row-gray { background-color: #f0f0f0; }
 
     .student-link { text-decoration: none; font-weight: bold; color: #2c3e50; }
+
+    .month-paid { color: #27ae60; font-weight: bold; }
+    .month-unpaid { color: #e74c3c; font-weight: bold; }
 </style>
 
 <div class="gd-container">
@@ -83,6 +113,12 @@
         </div>
         <a href="{% url 'group_list' %}" class="back-btn">🔙 Guruhlar ro'yxati</a>
     </div>
+
+    <form method="get" class="month-filter">
+        <label style="font-weight:600; color:#2c3e50;">📅 Oy bo'yicha to'lov holati:</label>
+        <input type="month" name="month" value="{{ selected_month_str }}">
+        <button type="submit">Ko'rsatish</button>
+    </form>
 
     <div class="legend">
         <span><span class="dot" style="background:#66bb6a;"></span> Yashil — muddat yaqin emas</span>
@@ -99,6 +135,7 @@
                     <th>Telefon</th>
                     <th>To'lov muddati</th>
                     <th>Balans</th>
+                    <th>{{ selected_month|date:"F Y" }} oyi to'lovi</th>
                 </tr>
             </thead>
             <tbody>
@@ -125,9 +162,16 @@
                     <td style="color: {% if s.balance < 0 %}#e74c3c{% else %}#27ae60{% endif %}; font-weight:bold;">
                         {{ s.balance }} so'm
                     </td>
+                    <td>
+                        {% if s.month_payment %}
+                            <span class="month-paid">✅ {{ s.month_payment.amount }} so'm</span>
+                        {% else %}
+                            <span class="month-unpaid">❌ To'lanmagan</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" style="text-align:center; padding:20px; color:#95a5a6;">Bu guruhda o'quvchilar yo'q</td></tr>
+                <tr><td colspan="5" style="text-align:center; padding:20px; color:#95a5a6;">Bu guruhda o'quvchilar yo'q</td></tr>
                 {% endfor %}
             </tbody>
         </table>

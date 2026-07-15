@@ -18,7 +18,7 @@
     
     <div style="background: #f0f7ff; padding: 15px; border-radius: 10px; margin-bottom: 25px; border-left: 5px solid #3498db;">
         <p style="margin: 0; font-size: 16px;">O'quvchi: <strong>{{ student.full_name }}</strong></p>
-        <p style="margin: 5px 0; font-size: 14px; color: #555;">Guruh narxi: <strong id="group-price">{{ student.group.price }}</strong> so'm</p>
+        <p style="margin: 5px 0; font-size: 14px; color: #555;">Guruh narxi: <strong id="group-price">{{ group_price }}</strong> so'm</p>
         <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Hozirgi muddat: 
             <span style="color: {% if student.days_left < 0 %}red{% else %}green{% endif %}; font-weight: bold;">
                 {{ student.pay_until|default:"Muddati yo'q" }}
@@ -31,18 +31,31 @@
         
         <div style="margin-bottom: 20px;">
             <label style="display: block; font-weight: 600; margin-bottom: 8px;">To'lov summasi (so'm):</label>
-            <input type="number" name="amount" id="payment-amount" value="{{ student.group.price }}" required 
+            <input type="number" name="amount" id="payment-amount" value="{{ group_price }}" required 
                    style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;" 
-                   oninput="calculateDebt()">
+                   oninput="onAmountChange()">
             
             <div id="debt-status" style="margin-top: 10px; font-size: 14px; font-weight: bold; display: none;"></div>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Yangi to'lov muddati (Pay until):</label>
+            <label style="display: block; font-weight: 600; margin-bottom: 10px;">Qaysi oy(lar) uchun to'lov:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                {% for m in month_options %}
+                <label style="display:flex; align-items:center; gap:8px; background:#f8f9fa; padding:10px 12px; border-radius:8px; font-size:14px; cursor:pointer;">
+                    <input type="checkbox" name="months" value="{{ m.value }}" class="month-checkbox" data-index="{{ forloop.counter0 }}" {% if forloop.first %}checked{% endif %}>
+                    {{ m.label }}
+                </label>
+                {% endfor %}
+            </div>
+            <small style="color:#888; display:block; margin-top:8px;">* Summaga qarab kerakli oylar avtomatik belgilanadi, xohlasangiz qo'lda o'zgartirishingiz mumkin</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Yangi to'lov muddati (ixtiyoriy, qo'lda belgilash):</label>
             <input type="date" name="pay_until" 
                    style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; background: #fffcf0;">
-            <small style="color: #888;">* To'liq to'lovda avtomat 30 kun qo'shiladi</small>
+            <small style="color: #888;">* Bo'sh qoldirilsa, tanlangan oy(lar)ga qarab avtomatik hisoblanadi</small>
         </div>
         
         <div style="margin-bottom: 20px;">
@@ -68,21 +81,43 @@
 </div>
 
 <script>
-    // Qarzni real vaqtda hisoblash funksiyasi
-    function calculateDebt() {
-        var groupPrice = parseFloat(document.getElementById('group-price').innerText);
+    const monthCheckboxes = Array.from(document.querySelectorAll('.month-checkbox'))
+        .sort((a, b) => parseInt(a.dataset.index) - parseInt(b.dataset.index));
+
+    let userManuallyChangedMonths = false;
+
+    monthCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => { userManuallyChangedMonths = true; });
+    });
+
+    function onAmountChange() {
+        var groupPrice = parseFloat(document.getElementById('group-price').innerText) || 1;
         var amountPaid = parseFloat(document.getElementById('payment-amount').value) || 0;
         var statusDiv = document.getElementById('debt-status');
 
-        if (amountPaid < groupPrice) {
-            var debt = groupPrice - amountPaid;
+        // Necha oyga yetishini hisoblash
+        var monthsCovered = Math.floor(amountPaid / groupPrice);
+        if (monthsCovered < 1 && amountPaid > 0) monthsCovered = 1;
+        if (monthsCovered > monthCheckboxes.length) monthsCovered = monthCheckboxes.length;
+
+        // Avtomatik checkbox belgilash (agar foydalanuvchi qo'lda o'zgartirmagan bo'lsa)
+        if (!userManuallyChangedMonths) {
+            monthCheckboxes.forEach((cb, idx) => {
+                cb.checked = idx < monthsCovered;
+            });
+        }
+
+        var totalForChecked = monthCheckboxes.filter(cb => cb.checked).length * groupPrice;
+        var remainder = amountPaid - (Math.floor(amountPaid / groupPrice) * groupPrice);
+
+        if (remainder > 0 && amountPaid < totalForChecked) {
             statusDiv.style.display = 'block';
             statusDiv.style.color = '#e67e22';
-            statusDiv.innerHTML = '⚠️ Eslatma: ' + debt.toLocaleString() + ' so\'m qarz qolmoqda!';
-        } else if (amountPaid > groupPrice) {
+            statusDiv.innerHTML = '⚠️ Eslatma: qisman to\'lov, ' + (totalForChecked - amountPaid).toLocaleString() + ' so\'m qarz qolishi mumkin!';
+        } else if (amountPaid > totalForChecked && totalForChecked > 0) {
             statusDiv.style.display = 'block';
             statusDiv.style.color = '#27ae60';
-            statusDiv.innerHTML = '✅ Guruh narxidan ortiqcha to\'lov!';
+            statusDiv.innerHTML = '✅ Belgilangan oylardan ortiqcha to\'lov!';
         } else {
             statusDiv.style.display = 'none';
         }
@@ -101,7 +136,6 @@
         }
     }
     
-    // Sahifa yuklanganda bir marta tekshirib qo'yish
-    window.onload = calculateDebt;
+    window.onload = onAmountChange;
 </script>
 {% endblock %}

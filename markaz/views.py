@@ -126,9 +126,37 @@ from .models import Student, Payment
 
 from django.contrib import messages
 
+from datetime import date
+
+from datetime import date
+
+UZ_MONTHS = {
+    1: 'Yanvar', 2: 'Fevral', 3: 'Mart', 4: 'Aprel', 5: 'May', 6: 'Iyun',
+    7: 'Iyul', 8: 'Avgust', 9: 'Sentabr', 10: 'Oktabr', 11: 'Noyabr', 12: 'Dekabr',
+}
+
+
+def add_months(d, months):
+    month = d.month - 1 + months
+    year = d.year + month // 12
+    month = month % 12 + 1
+    return date(year, month, 1)
+
+
 def student_payment(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     group_price = student.group.price
+    today = timezone.now().date()
+    current_month_date = date(today.year, today.month, 1)
+
+    # Checkbox uchun 6 oylik ro'yxat (joriy oydan boshlab)
+    month_options = []
+    for i in range(6):
+        m = add_months(current_month_date, i)
+        month_options.append({
+            'value': m.strftime('%Y-%m'),
+            'label': f"{UZ_MONTHS[m.month]} {m.year}",
+        })
 
     if request.method == "POST":
         try:
@@ -138,36 +166,68 @@ def student_payment(request, student_id):
 
         payment_type = request.POST.get('payment_type')
         custom_date = request.POST.get('pay_until')
-        receipt_file = request.FILES.get('receipt')   # <-- YANGI QATOR
+        receipt_file = request.FILES.get('receipt')
+        selected_months = request.POST.getlist('months')  # ['2026-07', '2026-08', ...]
 
-        # 1. To'lovni saqlash
-        Payment.objects.create(
-            student=student,
-            amount=amount,
-            payment_type=payment_type,
-            receipt_image=receipt_file,                # <-- YANGI QATOR
-        )
+        # 1. To'lovni tanlangan oy(lar)ga bo'lib saqlash
+        if selected_months:
+            count = len(selected_months)
+            base_amount = amount // count
+            remainder = amount - base_amount * count
 
-        # 2. Eskini unutish va yangi balansni o'rnatish
+            for idx, month_str in enumerate(selected_months):
+                y, m = map(int, month_str.split('-'))
+                month_date = date(y, m, 1)
+                pay_amount = base_amount + (remainder if idx == count - 1 else 0)
+                Payment.objects.create(
+                    student=student,
+                    amount=pay_amount,
+                    payment_type=payment_type,
+                    receipt_image=receipt_file if idx == 0 else None,
+                    for_month=month_date,
+                )
+            last_month_date = date(
+                *map(int, sorted(selected_months)[-1].split('-')), 1
+            ) if False else date(
+                int(sorted(selected_months)[-1].split('-')[0]),
+                int(sorted(selected_months)[-1].split('-')[1]), 1
+            )
+        else:
+            Payment.objects.create(
+                student=student,
+                amount=amount,
+                payment_type=payment_type,
+                receipt_image=receipt_file,
+                for_month=current_month_date,
+            )
+            last_month_date = current_month_date
+
+        # 2. Balansni yangilash
         student.balance = amount
 
-        # 3. Xabarnoma va Muddat mantiqi
-        if amount < group_price:
-            difference = group_price - amount
-            messages.warning(request, f"Siz {amount} so'm to'lov qildingiz. To'liq kurs uchun yana {difference} so'm to'lashingiz kerak.")
+        # 3. Xabarnoma
+        total_needed = group_price * max(len(selected_months), 1)
+        if amount < total_needed:
+            difference = total_needed - amount
+            messages.warning(request, f"Siz {amount} so'm to'lov qildingiz. To'liq to'lov uchun yana {difference} so'm to'lashingiz kerak.")
         else:
             messages.success(request, f"To'lov muvaffaqiyatli qabul qilindi: {amount} so'm.")
 
-        # 4. Sana mantiqi
+        # 4. Muddat (pay_until) mantiqi
         if custom_date:
             student.pay_until = custom_date
-        elif amount >= group_price:
-            student.pay_until = timezone.now().date() + timedelta(days=30)
+        else:
+            # Tanlangan oxirgi oydan keyingi oy boshigacha muddat beriladi
+            student.pay_until = add_months(last_month_date, 1)
 
         student.save()
         return redirect('student_list')
 
-    return render(request, 'add_payment.html', {'student': student})
+    return render(request, 'add_payment.html', {
+        'student': student,
+        'month_options': month_options,
+        'group_price': int(group_price),
+    })
 
 
 
@@ -708,14 +768,32 @@ def delete_group(request, pk):
 
 
 
+
 @login_required
 def group_detail(request, group_id):
     group = get_object_or_404(Group, id=group_id)
     students = group.students.all().order_by('full_name')
+
+    month_str = request.GET.get('month')
+    today = timezone.now().date()
+
+    if month_str:
+        try:
+            y, m = map(int, month_str.split('-'))
+            selected_month = date(y, m, 1)
+        except ValueError:
+            selected_month = today.replace(day=1)
+    else:
+        selected_month = today.replace(day=1)
+
+    for s in students:
+        s.month_payment = Payment.objects.filter(student=s, for_month=selected_month).first()
+
     return render(request, 'group_detail.html', {
         'group': group,
         'students': students,
+        'selected_month': selected_month,
+        'selected_month_str': selected_month.strftime('%Y-%m'),
     })
-
 
 

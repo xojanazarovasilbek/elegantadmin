@@ -80,11 +80,13 @@ class Payment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_type = models.CharField(max_length=10, choices=PAYMENT_TYPES)
-    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True) # Chek rasmi
+    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
+    # YANGI MAYDON
+    for_month = models.DateField(null=True, blank=True, verbose_name="Qaysi oy uchun to'lov")
+
     def save(self, *args, **kwargs):
-        # To'lov qilinganda o'quvchi balansini avtomat oshirish
         self.student.balance += Decimal(self.amount)
         self.student.save()
         super().save(*args, **kwargs)
