@@ -10,31 +10,38 @@
         <tr>
             <th>Guruh nomi</th>
             <th>Mas'ul Ustoz</th>
-            <th>Kurs Narxi</th> <th>O'quvchilar</th>
+            <th>Kurs Narxi</th>
+            <th>O'quvchilar</th>
             <th style="text-align: center;">Amallar</th>
         </tr>
     </thead>
     <tbody>
         {% for g in groups %}
         <tr>
-            <td><b style="color: #2c3e50;">{{ g.name }}</b></td>
-            
+            <td>
+                <a href="{% url 'group_detail' g.id %}" style="text-decoration:none; font-weight:bold; color:#2c3e50;">
+                    {{ g.name }}
+                </a>
+            </td>
+
             <td>
                 <span style="background: #f0f4f8; padding: 4px 10px; border-radius: 6px; font-size: 14px;">
                     👨‍🏫 {{ g.teacher }}
                 </span>
             </td>
-            
+
             <td>
                 <b style="color: #27ae60;">{{ g.price|default:"0" }} so'm</b>
             </td>
-            
+
             <td>
-                <span style="background: #fff3e0; color: #e65100; padding: 3px 8px; border-radius: 12px; font-size: 13px; font-weight: bold;">
-                    👤 {{ g.students.count }} ta
-                </span>
+                <a href="{% url 'group_detail' g.id %}" style="text-decoration:none;">
+                    <span style="background: #fff3e0; color: #e65100; padding: 3px 8px; border-radius: 12px; font-size: 13px; font-weight: bold;">
+                        👤 {{ g.students.count }} ta
+                    </span>
+                </a>
             </td>
-            
+
             <td style="text-align: center;">
                 <div style="display: flex; gap: 8px; justify-content: center;">
                     <a href="{% url 'take_attendance' g.id %}" class="btn btn-info" style="font-size: 13px; padding: 6px 12px;">

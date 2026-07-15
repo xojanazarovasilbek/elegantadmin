@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .gd-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .gd-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .gd-header h2 { margin: 0; color: #2c3e50; }
+    .gd-header p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 13px; }
+
+    .back-btn {
+        background: #ecf0f1;
+        color: #2c3e50;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 13px;
+    }
+    .back-btn:hover { background: #dfe6e9; }
+
+    .legend {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        font-size: 12px;
+    }
+    .legend span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    .gd-table-wrapper {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    table.gd-table { width: 100%; border-collapse: collapse; }
+    table.gd-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+    table.gd-table td { padding: 12px; font-size: 14px; border-top: 1px solid #f1f1f1; }
+
+    .row-green { background-color: #c8e6c9; }
+    .row-yellow { background-color: #fff9c4; }
+    .row-red { background-color: #ffcdd2; }
+    .row-gray { background-color: #f0f0f0; }
+
+    .student-link { text-decoration: none; font-weight: bold; color: #2c3e50; }
+</style>
+
+<div class="gd-container">
+    <div class="gd-header">
+        <div>
+            <h2>📚 {{ group.name }}</h2>
+            <p>Ustoz: {{ group.teacher.user.get_full_name|default:group.teacher.user.username|default:"Biriktirilmagan" }} &nbsp;|&nbsp; Narxi: {{ group.price }} so'm &nbsp;|&nbsp; O'quvchilar: {{ students|length }} ta</p>
+        </div>
+        <a href="{% url 'group_list' %}" class="back-btn">🔙 Guruhlar ro'yxati</a>
+    </div>
+
+    <div class="legend">
+        <span><span class="dot" style="background:#66bb6a;"></span> Yashil — muddat yaqin emas</span>
+        <span><span class="dot" style="background:#fdd835;"></span> Sariq — muddat 10 kundan kam qoldi</span>
+        <span><span class="dot" style="background:#e57373;"></span> Qizil — muddat o'tib ketgan</span>
+        <span><span class="dot" style="background:#bdbdbd;"></span> Kulrang — hali to'lov qilmagan</span>
+    </div>
+
+    <div class="gd-table-wrapper">
+        <table class="gd-table">
+            <thead>
+                <tr>
+                    <th>F.I.SH</th>
+                    <th>Telefon</th>
+                    <th>To'lov muddati</th>
+                    <th>Balans</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr class="
+                    {% if s.days_left is None %}row-gray
+                    {% elif s.days_left < 0 %}row-red
+                    {% elif s.days_left < 10 %}row-yellow
+                    {% else %}row-green
+                    {% endif %}
+                ">
+                    <td>
+                        <a href="{% url 'student_detail' s.id %}" class="student-link">{{ s.full_name }}</a>
+                    </td>
+                    <td>{{ s.phone }}</td>
+                    <td>
+                        {% if s.pay_until %}
+                            {{ s.pay_until|date:"d.m.Y" }}
+                            <br><small>({{ s.days_left }} kun qoldi)</small>
+                        {% else %}
+                            <span style="color:#95a5a6;">To'lanmagan</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: {% if s.balance < 0 %}#e74c3c{% else %}#27ae60{% endif %}; font-weight:bold;">
+                        {{ s.balance }} so'm
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center; padding:20px; color:#95a5a6;">Bu guruhda o'quvchilar yo'q</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

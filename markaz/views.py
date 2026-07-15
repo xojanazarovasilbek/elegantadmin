@@ -704,3 +704,18 @@ def delete_group(request, pk):
         messages.success(request, "Guruh muvaffaqiyatli o'chirildi.")
 
     return redirect("group_list")
+
+
+
+
+@login_required
+def group_detail(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    students = group.students.all().order_by('full_name')
+    return render(request, 'group_detail.html', {
+        'group': group,
+        'students': students,
+    })
+
+
+
