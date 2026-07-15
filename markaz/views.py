@@ -82,36 +82,39 @@ def dashboard(request):
 def group_attendance_view(request, group_id):
     group = get_object_or_404(Group, id=group_id)
     students = group.students.all()
-    
+    today = timezone.now().date()
+
+    already_taken = Attendance.objects.filter(group=group, date=today).exists()
+
+    # Agar bugun allaqachon davomat olingan bo'lsa — bloklaymiz
+    if already_taken:
+        messages.warning(request, "⚠️ Bu guruh uchun bugungi davomat allaqachon olingan. O'zgartirish kerak bo'lsa, 'Davomat Hisoboti' sahifasidan foydalaning.")
+        return redirect('dashboard')
+
     if request.method == "POST":
         for student in students:
-            # Checkbox holati
             status = request.POST.get(f'attendance_{student.id}') == 'on'
-            # Sabab va Izoh
             reason = request.POST.get(f'reason_{student.id}')
             comment = request.POST.get(f'comment_{student.id}', "")
 
-            # Davomatni saqlash yoki yangilash
             Attendance.objects.update_or_create(
-                student=student, 
-                group=group, 
-                date=timezone.now().date(),
+                student=student,
+                group=group,
+                date=today,
                 defaults={
                     'is_present': status,
                     'reason_type': reason if not status else None,
                     'comment': comment if not status else ""
                 }
             )
-            
-            # SMS yuborish (faqat sababsiz bo'lsa yuborishni sozlasa ham bo'ladi)
+
             if not status and reason == 'sababsiz':
                 send_absent_sms(student.phone, student.full_name)
-                
+
         return redirect('dashboard')
 
-    # 3 marta dars qoldirganlarni dashboardda chiqarish uchun mantiqni 
-    # alohida dashboard viewda yozish tavsiya etiladi.
     return render(request, 'attendance.html', {'group': group, 'students': students})
+
 
 def send_absent_sms(phone, name):
     # Bu yerda SMS yuborish kodi bo'ladi
@@ -257,7 +260,12 @@ def teacher_list(request):
 # 4. Guruhlar ro'yxati
 @login_required
 def group_list(request):
+    today = timezone.now().date()
     groups = Group.objects.all()
+
+    for g in groups:
+        g.attendance_taken_today = Attendance.objects.filter(group=g, date=today).exists()
+
     return render(request, 'groups.html', {'groups': groups})
 
 # 5. Davomat hisoboti (Bugun kim keldi, kim kelmadi)

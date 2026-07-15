@@ -44,9 +44,15 @@
 
             <td style="text-align: center;">
                 <div style="display: flex; gap: 8px; justify-content: center;">
+                    {% if g.attendance_taken_today %}
+                    <span class="btn" style="background: #95a5a6; font-size: 13px; padding: 6px 12px; cursor: not-allowed;" title="Bugungi davomat allaqachon olingan">
+                        ✅ Olingan
+                    </span>
+                    {% else %}
                     <a href="{% url 'take_attendance' g.id %}" class="btn btn-info" style="font-size: 13px; padding: 6px 12px;">
                         ✅ Davomat
                     </a>
+                    {% endif %}
                     <a href="{% url 'change_teacher' g.id %}" class="btn btn-edit" title="Ustozni almashtirish" style="background: #9b59b6; border-color: #8e44ad;">
                         👤🔄
                     </a>
